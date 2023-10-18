@@ -24,11 +24,16 @@ def serve_file(client, filename):
         print(f"Erro ao enviar arquivo: {e}")
 
 def handle_request(client, address):
-    request = client.recv(1024).decode('utf-8')
-    parts = request.split()
-    
-    if len(parts) > 1 and parts[0] == 'GET':
-        filename = parts[1].lstrip('/')
+    request = client.recv(1024)
+    print(request)
+    # request = request.decode('utf-8')
+    parts = request.split(b'\r\n\r\n')
+    header = parts[0]
+    if(len(parts) > 1 and parts[1] != b''):
+        content_body = parts[2]
+    header_parts = header.split()    
+    if len(header_parts) > 1 and header_parts[0] == b'GET':
+        filename = header_parts[1].lstrip('/')
 
         if os.path.exists(filename):
             mimetype = detect_mimetype(filename)
@@ -39,6 +44,11 @@ def handle_request(client, address):
         else:
             response = "HTTP/1.1 404 Not Found\r\n\r\nArquivo não encontrado."
             client.send(response.encode('utf-8'))
+    if len(header_parts) > 1 and header_parts[0] == b'POST':
+        print('POSTTT')
+        with open('video_saved.mp4', 'wb') as video:
+            print('ok')
+            video.write(content_body)
 
     client.close()
 

@@ -4,56 +4,12 @@
     <meta charset="UTF-8">
     <title>Vídeo do Servidor</title>
 </head>
-<script>
-    const listaVideos = document.getElementById("lista-videos");
-    const reprodutor = document.getElementById("reprodutor");
 
-    listaVideos.addEventListener("click", function(e) {
-        if (e.target.tagName === "A") {
-            e.preventDefault();
-            const dataSrc = e.target.getAttribute("data-src");
-            const videoUrl = "http://127.0.0.1:8080/server/" + dataSrc;
-            const source = reprodutor.firstElementChild;
-            reprodutor.src = videoUrl;
-            reprodutor.load();
-            reprodutor.play();
-        }
-
-        
-    });
-
-    document.getElementById("formulario-upload").addEventListener("submit", function(e) {
-        e.preventDefault();
-
-        const arquivoInput = document.getElementById("arquivo");
-        const arquivo = arquivoInput.files[0];
-
-        if (arquivo) {
-            const formData = new FormData();
-            formData.append("arquivo", arquivo);
-
-            // Substitua a URL pelo endpoint do seu servidor de upload
-            fetch("http://127.0.0.1:8080/server/", {
-                method: "POST",
-                body: formData,
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log("Arquivo enviado com sucesso:", data);
-            })
-            .catch(error => {
-                console.error("Erro no envio do arquivo:", error);
-            });
-        } else {
-            console.error("Nenhum arquivo selecionado.");
-        }
-</script>
 <body>
-    
     <h1>Upload de Arquivos</h1>
-    <form id="formulario-upload" method="post">
-        <input type="file" id="arquivo" name="arquivo" accept="video/*" required>
-        <button type="submit">Enviar Arquivo</button>
+    <form id="upload-form" enctype="multipart/form-data">
+        <input type="file" name="video" id="video-input">
+        <button type="button" id="upload-button">Enviar</button>
     </form>
 
     <h1>Lista de Vídeos</h1>
@@ -70,4 +26,39 @@
     
     
 </body>
+<script>
+    const listaVideos = document.getElementById("lista-videos");
+    const reprodutor = document.getElementById("reprodutor");
+    const form = document.getElementById("formulario-upload");
+    listaVideos.addEventListener("click", function(e) {
+        if (e.target.tagName === "A") {
+            e.preventDefault();
+            const dataSrc = e.target.getAttribute("data-src");
+            const videoUrl = "http://127.0.0.1:8080/server/" + dataSrc;
+            const source = reprodutor.firstElementChild;
+            reprodutor.src = videoUrl;
+            reprodutor.load();
+            reprodutor.play();
+        }
+
+        
+    });
+
+    document.getElementById('upload-button').addEventListener('click', function () {
+            var fileInput = document.getElementById('video-input');
+            var file = fileInput.files[0];
+            var serialized_file = file.stream();
+
+            fetch('http://127.0.0.1:8080/server/', {
+                method: 'POST',
+                body: serialized_file
+            })
+            .then(data => {
+                console.log(data);
+            })
+            .catch(error => {
+                console.log(error);
+            });
+        });
+</script>
 </html>
