@@ -16,6 +16,7 @@
         <li><a href="#" id-video="video.mp4">Vídeo 1</a></li>
         <li><a href="#" id-video="video2.mp4">Vídeo 2</a></li>
         <li><a href="#" id-video="video3.mp4">Vídeo 3</a></li>
+        <li><a href="#" id-video="video4.mp4">Vídeo 4</a></li>
     </ul>
     <video width="640" height="360" controls id="video-player">
         Seu navegador não suporta a exibição de vídeos.
@@ -35,20 +36,21 @@
             const videoUrl = "/stream?id="+dataSrc;
             const source = reprodutor.firstElementChild;
             reprodutor.src = videoUrl;
-            console.log(videoUrl);
             reprodutor.load();
             reprodutor.play();
         }
     });
 
     upload_button.addEventListener('click', function () {
+            console.log('Upload')
             var fileInput = document.getElementById('video-input');
             var file = fileInput.files[0];
             var serialized_file = file.stream();
-
-            fetch('/server/', {
+            var formData = new FormData()
+            formData.append('file', file);
+            fetch('/upload', {
                 method: 'POST',
-                body: serialized_file
+                body: formData
             })
             .then(data => {
                 console.log(data);

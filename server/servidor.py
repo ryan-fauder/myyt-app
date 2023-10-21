@@ -6,51 +6,48 @@ import time
 # Defina o endereço e a porta do servidor
 host = '127.0.0.1'  # Substitua pelo endereço do servidor
 port = 8080
-
+path = 'C:/Users/Randy/Downloads/Aulas/8 Periodo/Sistemas Distribuidos/myyt-app/server/storage/'
 def detect_mimetype(filename):
     # Detecta o tipo MIME do arquivo com base na extensão do arquivo
     return mimetypes.guess_type(filename)[0]
 
+def upload_file(client, filename):
+    try:
+        with open(path + filename, 'wb') as file:
+            while True:
+                chunk = client.recv(4096)
+                if not chunk:
+                    break
+                file.write(chunk)
+    except Exception as e:
+        print(f"Erro ao enviar arquivo: {e}")
+
 def serve_file(client, filename):
     try:
-        with open(filename, 'rb') as file:
+        with open(path + filename, 'rb') as file:
             while True:
-                chunk = file.read(1024)
+                chunk = file.read(4096)
                 if not chunk:
                     break
                 client.send(chunk)
-                time.sleep(0.01)  # Pequeno atraso para controlar a taxa de envio
     except Exception as e:
         print(f"Erro ao enviar arquivo: {e}")
 
 def handle_request(client, address):
     request = client.recv(1024)
-    print(request)
-    # request = request.decode('utf-8')
-    parts = request.split(b'\r\n\r\n')
-    header = parts[0]
-    if(len(parts) > 1 and parts[1] != b''):
-        content_body = parts[2]
-    header_parts = header.split()    
-    if len(header_parts) > 1 and header_parts[0] == b'GET':
-        filename = header_parts[1].lstrip('/')
-
-        if os.path.exists(filename):
-            mimetype = detect_mimetype(filename)
-            response = f"HTTP/1.1 200 OK\r\nContent-Type: {mimetype}\r\n\r\n"
-            client.send(response.encode('utf-8'))
-
+    header = request.decode('utf-8')
+    method, filename = header.split()
+    if(not method or not filename): return
+    if method == 'STREAM':
+        if os.path.exists(path + filename):
             serve_file(client, filename)
         else:
-            response = "HTTP/1.1 404 Not Found\r\n\r\nArquivo não encontrado."
-            client.send(response.encode('utf-8'))
-    if len(header_parts) > 1 and header_parts[0] == b'POST':
-        print('POSTTT')
-        with open('video_saved.mp4', 'wb') as video:
-            print('ok')
-            video.write(content_body)
-
-    client.close()
+            response = "ERROR"
+            client.send(response.encode())
+    elif method == 'UPLOAD':
+        print('LETS UPLOAD')
+        upload_file(client, filename)
+    
 
 if __name__ == "__main__":
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -65,3 +62,4 @@ if __name__ == "__main__":
 
         # Lide com a solicitação em uma nova thread para lidar com várias conexões
         handle_request(client, address)
+        client.close()
