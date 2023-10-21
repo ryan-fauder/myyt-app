@@ -2,9 +2,8 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Vídeo do Servidor</title>
+    <title>File Upload and Video Streaming</title>
 </head>
-
 <body>
     <h1>Upload de Arquivos</h1>
     <form id="upload-form" enctype="multipart/form-data">
@@ -14,42 +13,40 @@
 
     <h1>Lista de Vídeos</h1>
     <ul id="lista-videos">
-        <li><a href="#" data-src="video.mp4">Vídeo 1</a></li>
-        <li><a href="#" data-src="video2.mp4">Vídeo 2</a></li>
-        <li><a href="#" data-src="video3.mp4">Vídeo 3</a></li>
+        <li><a href="#" id-video="video.mp4">Vídeo 1</a></li>
+        <li><a href="#" id-video="video2.mp4">Vídeo 2</a></li>
+        <li><a href="#" id-video="video3.mp4">Vídeo 3</a></li>
     </ul>
-    <div>
-        <video id="reprodutor" width="640" height="480" controls>
-            Seu navegador não suporta a exibição de vídeos.
-        </video>
-    </div>
-    
-    
+    <video width="640" height="360" controls id="video-player">
+        Seu navegador não suporta a exibição de vídeos.
+    </video>
+
 </body>
 <script>
     const listaVideos = document.getElementById("lista-videos");
-    const reprodutor = document.getElementById("reprodutor");
-    const form = document.getElementById("formulario-upload");
+    const reprodutor = document.getElementById("video-player");
+    const form = document.getElementById("upload-form");
+    const upload_button = document.getElementById('upload-button');
+
     listaVideos.addEventListener("click", function(e) {
         if (e.target.tagName === "A") {
             e.preventDefault();
-            const dataSrc = e.target.getAttribute("data-src");
-            const videoUrl = "http://127.0.0.1:8080/server/" + dataSrc;
+            const dataSrc = e.target.getAttribute("id-video");
+            const videoUrl = "/stream?id="+dataSrc;
             const source = reprodutor.firstElementChild;
             reprodutor.src = videoUrl;
+            console.log(videoUrl);
             reprodutor.load();
             reprodutor.play();
         }
-
-        
     });
 
-    document.getElementById('upload-button').addEventListener('click', function () {
+    upload_button.addEventListener('click', function () {
             var fileInput = document.getElementById('video-input');
             var file = fileInput.files[0];
             var serialized_file = file.stream();
 
-            fetch('http://127.0.0.1:8080/server/', {
+            fetch('/server/', {
                 method: 'POST',
                 body: serialized_file
             })
