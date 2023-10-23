@@ -2,29 +2,30 @@ import socket
 import os
 import mimetypes
 import time
-
+import io
+from videoDao import VideoDAO
 # Defina o endereço e a porta do servidor
 host = '127.0.0.1'  # Substitua pelo endereço do servidor
 port = 8080
-path = 'C:/Users/Randy/Downloads/Aulas/8 Periodo/Sistemas Distribuidos/myyt-app/server/storage/'
+videoStorageHandler = VideoDAO()
 def detect_mimetype(filename):
     # Detecta o tipo MIME do arquivo com base na extensão do arquivo
     return mimetypes.guess_type(filename)[0]
 
 def upload_file(client, filename):
     try:
-        with open(path + filename, 'wb') as file:
-            while True:
-                chunk = client.recv(4096)
-                if not chunk:
-                    break
-                file.write(chunk)
+        buffer = io.BytesIO()
+        while True:
+            chunk = client.recv(4096)
+            if not chunk:
+                break
+            buffer.write(chunk)
+        videoStorageHandler.add(buffer)
     except Exception as e:
         print(f"Erro ao enviar arquivo: {e}")
 
-def serve_file(client, filename):
+def stream_file(client, filename):
     try:
-        with open(path + filename, 'rb') as file:
             while True:
                 chunk = file.read(4096)
                 if not chunk:
@@ -40,12 +41,11 @@ def handle_request(client, address):
     if(not method or not filename): return
     if method == 'STREAM':
         if os.path.exists(path + filename):
-            serve_file(client, filename)
+            stream_file(client, filename)
         else:
             response = "ERROR"
             client.send(response.encode())
     elif method == 'UPLOAD':
-        print('LETS UPLOAD')
         upload_file(client, filename)
     
 

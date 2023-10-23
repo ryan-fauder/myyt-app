@@ -21,8 +21,6 @@ def upload():
     header_formatted = f"{header: <1024}"
     print(header_formatted)
     client.send(header_formatted.encode())
-    #file_size = file.seek(0, os.SEEK_END)
-    #client.send(str(file_size).encode())
     data = file.read()
     client.sendall(data)
     client.send(b"<END>")
@@ -36,16 +34,15 @@ def stream():
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((HOST, PORT))
     header = f"STREAM {video_name} "
-    client.send(f"{header: <1024}".encode())  # Use the "STREAM" request format
+    client.send(f"{header: <1024}".encode())
     
     def generate(client):
-        chunk_size = 4096  # Tamanho dos pedaços em bytes
+        chunk_size = 4096
         while True:
             data = client.recv(chunk_size)
             if not data:
                 break
             yield data
-            # time.sleep(0.01)  # Pequeno atraso para controlar a taxa de envio
         client.close()
     return Response(generate(client), content_type='video/mp4')
 
